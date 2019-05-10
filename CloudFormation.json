@@ -1,0 +1,165 @@
+{
+   "Description":"This Cloud Formation Teamplate is used to Launch EC2 Instances on AWS Accounts",
+   "AWSTemplateFormatVersion":"2010-09-09",
+   "Parameters":{
+      "VPC":{ 
+         "Description":"VPC that can be used to access the EC2 instances",
+         "Type":"AWS::EC2::VPC::Id",
+         "ConstraintDescription":"must be in list of VPC ids"
+      },
+      "Subnet":{
+         "Description":"Subnet that can be used to access the EC2 instances",
+         "Type":"AWS::EC2::Subnet::Id",
+         "ConstraintDescription":"must be in the list of subnet ids"
+      },
+      "SecurityGroupId":{ 
+         "Description":"Security groups that can be used to access the EC2 instances",
+         "Type":"AWS::EC2::SecurityGroup::Id",
+         "ConstraintDescription":"must be list of EC2 security group ids"
+      }
+   },
+   "Resources":{ 
+      "Server1":{ 
+         "Type":"AWS::EC2::Instance",
+         "Properties":{
+	        "ImageId":"ami-0b76c3b150c6b1423",		
+		 "BlockDeviceMappings":[  
+               		{  
+                  		"DeviceName":"/dev/sda1",
+                 		 "Ebs":{  
+                    				 "VolumeSize":"64",
+						             "VolumeType":"gp2"
+                 			 }					
+               		},
+					{  
+                  		"DeviceName":"/dev/sdb",
+                 		 "Ebs":{  
+                    				 "VolumeSize":"20",
+						             "VolumeType":"gp2"
+                 			 }					
+               		},
+					{  
+                  		"DeviceName":"/dev/sdc",
+                 		 "Ebs":{  
+                    				 "VolumeSize":"20",
+						             "VolumeType":"gp2"
+                 			 }					
+               		}
+            				],
+            	"InstanceType":"t2.medium",
+            	"KeyName":"MBS-Kmaster-Prod-Key",
+            	"NetworkInterfaces":[
+               {  
+                  "AssociatePublicIpAddress":"true",
+                  "DeviceIndex":"0",
+                  "GroupSet":[{ "Ref":"SecurityGroupId"}],
+                  "SubnetId":{  
+                     "Ref":"Subnet"
+                  }
+               }
+            ],
+            "Tags":[  
+               {  
+                  "Key":"Name",
+                  "Value":"CFTest"
+               }
+            ],
+			"UserData" : { 
+				"Fn::Base64" : { 
+					"Fn::Join" :[
+									"", 
+											[	
+												"#!/bin/bash -v\n",
+												"# Add kube user to sudoers and disable tty\n",
+												"sudo su \n",
+												"echo \"kube ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers\n",
+												"echo \"Defaults:%kube !requiretty\" >> /etc/sudoers\n",
+												"echo \"Defaults:kube !requiretty\" >> /etc/sudoers\n",
+												"sudo apt-get update && apt-get install -y apt-transport-https && ca-certificates && curl && software-properties-common && apt-get install -y docker.io  \n",
+												"sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - \n",
+												"sudo systemctl start docker \n",
+												"sudo systemctl enable docker \n",
+												"sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add \n",
+												"sudo apt-get update && apt-get install -y kubelet kubeadm kubectl \n",
+												"sudo apt-get update \n",
+												"sudo kubeadm init --pod-network-cidr=192.168.16.0/24 \n",
+												"sudo kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')’ \n"
+											]
+								]
+							   }
+						 }				
+	 }
+	 },
+	  "Server2":{ 
+         "Type":"AWS::EC2::Instance",
+         "Properties":{
+	        "ImageId":"ami-0b76c3b150c6b1423",		
+		 "BlockDeviceMappings":[  
+               		{  
+                  		"DeviceName":"/dev/sda1",
+                 		 "Ebs":{  
+                    				 "VolumeSize":"128",
+						             "VolumeType":"gp2"
+                 			 }					
+               		}
+            				],
+            	"InstanceType":"t2.medium",
+            	"KeyName":"MBS-Kmaster-Prod-Key",
+            	"NetworkInterfaces":[
+               {  
+                  "AssociatePublicIpAddress":"true",
+                  "DeviceIndex":"0",
+                  "GroupSet":[{ "Ref":"SecurityGroupId"}],
+                  "SubnetId":{  
+                     "Ref":"Subnet"
+                 }
+               }
+            ],
+            "Tags":[  
+               {  
+                  "Key":"Name",
+                  "Value":"CFTest2"
+               }
+            ]
+	 }
+	 },
+	  "Server3":{ 
+         "Type":"AWS::EC2::Instance",
+         "Properties":{
+	        "ImageId":"ami-0b76c3b150c6b1423",		
+		 "BlockDeviceMappings":[  
+               		{  
+                  		"DeviceName":"/dev/sda1",
+                 		 "Ebs":{  
+                    				 "VolumeSize":"128",
+						             "VolumeType":"gp2"
+                 			 }					
+               		}					
+            				],
+            	"InstanceType":"t2.medium",
+            	"KeyName":"MBS-Kmaster-Prod-Key",
+            	"NetworkInterfaces":[
+               {  
+                  "AssociatePublicIpAddress":"true",
+                  "DeviceIndex":"0",
+                  "GroupSet":[{ "Ref":"SecurityGroupId"}],
+                  "SubnetId":{  
+                     "Ref":"Subnet"
+                  }
+               }
+            ],
+            "Tags":[  
+               {  
+                  "Key":"Name",
+                  "Value":"CFTest3"
+               }
+            ]	 
+	 }
+	 }
+    }
+}
+
+      
+   
+            
+   
